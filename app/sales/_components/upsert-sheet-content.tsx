@@ -108,47 +108,43 @@ const UpsertSheetContent = ({
       (product) => product.id === data.productId,
     );
     if (!selectedProduct) return;
-    setSelectedProducts((currentProducts) => {
-      const existingProduct = currentProducts.find(
+    const existingProduct = selectedProducts.find(
+      (product) => product.id === selectedProduct.id,
+    );
+    const quantityAlreadyInSale =
+      defaultSelectedProducts?.find(
         (product) => product.id === selectedProduct.id,
+      )?.quantity ?? 0;
+    const nextQuantity = (existingProduct?.quantity ?? 0) + data.quantity;
+    const availableQuantity = selectedProduct.stock + quantityAlreadyInSale;
+
+    if (nextQuantity > availableQuantity) {
+      form.setError("quantity", {
+        message: "Quantidade indisponível em estoque.",
+      });
+      return;
+    }
+
+    if (existingProduct) {
+      setSelectedProducts(
+        selectedProducts.map((product) =>
+          product.id === selectedProduct.id
+            ? { ...product, quantity: nextQuantity }
+            : product,
+        ),
       );
-      if (existingProduct) {
-        const productIsOutOfStock =
-          existingProduct.quantity + data.quantity > selectedProduct.stock;
-        if (productIsOutOfStock) {
-          form.setError("quantity", {
-            message: "Quantidade indisponível em estoque.",
-          });
-          return currentProducts;
-        }
-        form.reset();
-        return currentProducts.map((product) => {
-          if (product.id === selectedProduct.id) {
-            return {
-              ...product,
-              quantity: product.quantity + data.quantity,
-            };
-          }
-          return product;
-        });
-      }
-      const productIsOutOfStock = data.quantity > selectedProduct.stock;
-      if (productIsOutOfStock) {
-        form.setError("quantity", {
-          message: "Quantidade indisponível em estoque.",
-        });
-        return currentProducts;
-      }
-      form.reset();
-      return [
-        ...currentProducts,
+    } else {
+      setSelectedProducts([
+        ...selectedProducts,
         {
           ...selectedProduct,
           price: Number(selectedProduct.price),
           quantity: data.quantity,
         },
-      ];
-    });
+      ]);
+    }
+
+    form.reset();
   };
   const productsTotal = useMemo(() => {
     return selectedProducts.reduce((acc, product) => {
