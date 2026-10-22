@@ -46,6 +46,13 @@ const SalesTableDropdownMenu = ({
   productOptions,
 }: SalesTableDropdownMenuProps) => {
   const [upsertSheetIsOpen, setUpsertSheetIsOpen] = useState(false);
+  const [editorInstance, setEditorInstance] = useState(0);
+
+  const handleSheetOpenChange = (open: boolean) => {
+    if (open) setEditorInstance((currentInstance) => currentInstance + 1);
+    setUpsertSheetIsOpen(open);
+  };
+
   const { execute } = useAction(deleteSale, {
     onSuccess: () => {
       toast.success("Venda deletada com sucesso.");
@@ -60,7 +67,7 @@ const SalesTableDropdownMenu = ({
   };
   const handleConfirmDeleteClick = () => execute({ id: sale.id });
   return (
-    <Sheet open={upsertSheetIsOpen} onOpenChange={setUpsertSheetIsOpen}>
+    <Sheet open={upsertSheetIsOpen} onOpenChange={handleSheetOpenChange}>
       <AlertDialog>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -110,8 +117,8 @@ const SalesTableDropdownMenu = ({
       </AlertDialog>
 
       <UpsertSheetContent
+        key={editorInstance}
         saleId={sale.id}
-        isOpen={upsertSheetIsOpen}
         productOptions={productOptions}
         products={products}
         setSheetIsOpen={setUpsertSheetIsOpen}
